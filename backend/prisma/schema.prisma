@@ -1,0 +1,25 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Account {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  balance   Decimal  @default(100.00) // Starting money for demo
+  entries   LedgerEntry[]
+}
+
+model LedgerEntry {
+  id               String   @id @default(uuid())
+  accountId        String
+  amount           Decimal  // Negative for debit, Positive for credit
+  type             String   // "DEBIT" or "CREDIT"
+  idempotencyKey   String   @unique // Prevents double-spending
+  createdAt        DateTime @default(now())
+  account          Account  @relation(fields: [accountId], references: [id])
+}
