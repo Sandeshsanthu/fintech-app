@@ -2,9 +2,17 @@
 import express from "express";
 import { prisma } from "./prisma";
 import { processPayment } from "./ledger";
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
 
 const app = express();
 app.use(express.json());
+
+// Initialize Razorpay
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID!,
+  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+});
 
 // ROUTE 1: Check Balance
 app.get("/balance/:userId", async (req, res) => {
@@ -12,7 +20,7 @@ app.get("/balance/:userId", async (req, res) => {
   res.json({ balance: wallet?.balance || "0.00" });
 });
 
-// ROUTE 2: Pay
+// ROUTE 2: Pay (Existing internal payment logic)
 app.post("/pay", async (req, res) => {
   try {
     const { userId, amount, idempotencyKey } = req.body;
@@ -20,6 +28,68 @@ app.post("/pay", async (req, res) => {
     res.json({ message: "Success", newBalance: result.balance });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// ROUTE 3: CREATE ORDER - Tell Razorpay we want to collect money
+app.post('/create-order', async (req, res) => {
+  const { amount, userId } = req.body; 
+  
+  const options = {
+    amount: amount * 100, // Razorpay works in paise (100 = 1 INR)
+    currency: "INR",
+    receipt: `receipt_${userId}_${Date.now()}`,
+  };
+
+  try {
+    const order = await razorpay.orders.create(options);
+    res.json(order); // Send order_id back to user
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+// ROUTE 4: VERIFY & LEDGER SYNC - Confirm the money actually arrived
+app.post('/verify-payment', async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId, amount } = req.body;
+
+  // Verify the signature (Security check)
+  const sign = razorpay_order_id + "|" + razorpay_payment_id;
+  const expectedSign = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
+    .update(sign.toString())
+    .digest("hex");
+
+  if (razorpay_signature === expectedSign) {
+    // SUCCESS: Now update the "Accounting Brain" (Ledger)
+    try {
+        const wallet = await prisma.wallet.findUnique({ where: { userId } });
+        
+        if (!wallet) {
+          return res.status(404).json({ error: "Wallet not found" });
+        }
+
+        await prisma.$transaction([
+            prisma.ledger.create({
+                data: {
+                    walletId: wallet.id,
+                    amount: amount, // Positive amount (Credit)
+                    idempotencyKey: razorpay_payment_id, // Use payment ID to prevent double-entry
+                    description: "Deposit via Razorpay"
+                }
+            }),
+            prisma.wallet.update({
+                where: { userId },
+                data: { balance: { increment: amount } }
+            })
+        ]);
+        res.json({ status: "Payment Verified & Ledger Updated" });
+    } catch (e) {
+        console.error("Ledger Update Error:", e);
+        res.status(500).json({ error: "Ledger Update Failed" });
+    }
+  } else {
+    res.status(400).send("Invalid Signature");
   }
 });
 
@@ -39,4 +109,3 @@ app.listen(3000, async () => {
     console.error("DB Connection Error: Make sure Docker is running");
   }
 });
-
