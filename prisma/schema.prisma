@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id     String  @id @default(cuid())
+  email  String  @unique
+  wallet Wallet?
+}
+
+model Wallet {
+  id      String  @id @default(cuid())
+  userId  String  @unique
+  balance Decimal @default(1000.00) @db.Decimal(18, 2)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ledger  Ledger[]
+}
+
+model Ledger {
+  id             String   @id @default(cuid())
+  walletId       String
+  amount         Decimal  @db.Decimal(18, 2) // negative=debit, positive=credit
+  idempotencyKey String   @unique
+  description    String
+  createdAt      DateTime @default(now())
+
+  wallet         Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, createdAt])
+}
+
