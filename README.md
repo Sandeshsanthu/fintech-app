@@ -15,3 +15,10 @@ sudo docker compose restart backend
 sudo docker compose up --build
 
 
+ubuntu@ip-172-31-42-153:~/fintech-app$ curl -X POST http://localhost:5001/register -H "Content-Type: application/json" -d '{"email": "victory@example.com", "password": "thiswillwork"}'
+{"message":"User registered successfully","user_id":"75c67738-dc0f-45e6-9ce9-180f1c96a68b"}
+ubuntu@ip-172-31-42-153:~/fintech-app$ curl -X POST http://localhost:3000/pay -H "Content-Type: application/json" -d '{"userId": "75c67738-dc0f-45e6-9ce9-180f1c96a68b", "amount": 10, "idempotencyKey": "tx_demo_003"}'
+{"error":"Wallet not found"}ubuntu@ip-172-31-42-153:~/fintech-app$ curl -X POST http://localhost:5001/login -H "Content-Type: application/json" -d '{"email": "victory@example.com", "password": "thiswillwork"}'
+{"message":"Login successful","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNzVjNjc3MzgtZGMwZi00NWU2LTljZTktMTgwZjFjOTZhNjhiIiwiZXhwIjoxNzc0NDU5MTEwfQ.K9kuObF4pn2V6U336k2l8rPCgPO4Wu2MV6KROgihoVA"}
+
+

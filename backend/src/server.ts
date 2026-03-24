@@ -31,6 +31,32 @@ app.get("/balance/:userId", async (req, res) => {
   res.json({ balance: wallet?.balance || "0.00" });
 });
 
+// ROUTE 1.5: Internal Create Wallet
+app.post("/create-wallet", async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+
+  try {
+    const newWallet = await prisma.wallet.create({
+      data: {
+        userId: userId,
+        balance: 0 // New users start with a balance of 0
+      }
+    });
+    res.status(201).json(newWallet);
+  } catch (e: any) {
+    // This will catch errors if the wallet already exists
+    if (e.code === 'P2002') { // Prisma's unique constraint violation code
+      return res.status(409).json({ error: "Wallet for this user already exists." });
+    }
+    console.error("Create Wallet Error:", e);
+    res.status(500).json({ error: "Could not create wallet." });
+  }
+});
+
 // ROUTE 2: Internal Pay (Phase 0 - Peer-to-Peer logic)
 app.post("/pay", async (req, res) => {
   try {
