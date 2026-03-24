@@ -15,4 +15,4 @@ sudo docker compose restart backend
 sudo docker compose up --build
 
 
-exciting about the things 
+interview was not good
