@@ -12,10 +12,8 @@ app.config.from_object(Config)
 db.init_app(app)
 bcrypt = Bcrypt(app)
 
-# Create tables before first request
-@app.before_first_request
-def create_tables():
-    db.create_all()
+# NOTE: The db.create_all() line has been REMOVED.
+# We now trust that the 'nodejs_backend' service manages the database schema with Prisma.
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -23,6 +21,7 @@ def register():
     if not data or not data.get('email') or not data.get('password'):
         return jsonify({"message": "Email and password are required"}), 400
 
+    # This query now assumes the 'users' table exists.
     if User.query.filter_by(email=data['email']).first():
         return jsonify({"message": "User already exists"}), 400
 
@@ -35,7 +34,7 @@ def register():
     )
     db.session.add(new_user)
     db.session.commit()
-    
+
     return jsonify({"message": "User registered successfully", "user_id": new_user.id}), 201
 
 @app.route('/login', methods=['POST'])
@@ -56,11 +55,9 @@ def login():
 
     return jsonify({"message": "Login successful", "token": token}), 200
 
-# Add a root route for health check
 @app.route('/', methods=['GET'])
 def health_check():
     return "Auth Service is running."
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
-

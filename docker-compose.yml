@@ -46,6 +46,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    ports:
+      - "5001:5001"
     depends_on:
       db: # It depends on the SAME database
         condition: service_healthy
