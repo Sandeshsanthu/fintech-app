@@ -15,4 +15,4 @@ sudo docker compose restart backend
 sudo docker compose up --build
 
 
-new push
+exciting about the things 
