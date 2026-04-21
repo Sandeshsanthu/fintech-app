@@ -21,7 +21,7 @@ services:
     restart: unless-stopped
 
   api-gateway:
-    image: YOUR_DOCKERHUB_USERNAME/paypal-api-gateway:latest  # ← CHANGE THIS
+    image: sandeshs/api-gateway-fintech:latest  # ← CHANGE THIS
     container_name: paypal-gateway
     ports:
       - "8080:8080"
