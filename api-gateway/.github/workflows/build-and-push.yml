@@ -11,10 +11,12 @@ on:
     branches:
       - main
   workflow_dispatch:
-  env:
+
+env:
   DOCKER_IMAGE_NAME: api-gateway
   DOCKER_REGISTRY: docker.io
-  jobs:
+
+jobs:
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
@@ -30,4 +32,11 @@ on:
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN 
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api-gateway
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
