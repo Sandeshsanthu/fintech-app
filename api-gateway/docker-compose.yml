@@ -21,7 +21,7 @@ services:
     restart: unless-stopped
 
   api-gateway:
-    image: sandeshs/api-gateway-fintech:main-ef6863c  # ← CHANGE THIS
+    image: sandeshs/api-gateway-fintech:main-206abf7  # ← CHANGE THIS
     container_name: paypal-gateway
     ports:
       - "8080:8080"

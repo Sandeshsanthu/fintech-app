@@ -15,6 +15,7 @@ public class RateLimitConfig {
      * Falls back to IP if no user ID available
      */
     @Bean
+    @Primary
     public KeyResolver userKeyResolver() {
         return exchange -> {
             String userId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
