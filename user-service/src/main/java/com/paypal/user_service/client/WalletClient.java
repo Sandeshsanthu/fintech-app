@@ -10,3 +10,5 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface WalletClient {
     @PostMapping
     WalletResponse createWallet(@RequestBody CreateWalletRequest request);
+
+}
