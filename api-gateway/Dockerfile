@@ -5,14 +5,20 @@ WORKDIR /app
 # Install Maven
 RUN apk add --no-cache maven
 
-# Copy parent pom first (for better caching)
+# Copy parent pom
 COPY pom.xml .
 
-# Copy api-gateway module
+# Copy ALL module pom.xml files (Maven needs to see them)
 COPY api-gateway/pom.xml api-gateway/
-COPY api-gateway/src api-gateway/src
+COPY wallet-service/pom.xml wallet-service/
+COPY user-service/pom.xml user-service/
 
-# Build only api-gateway
+# Copy ALL module source code (Maven reactor needs them)
+COPY api-gateway/src api-gateway/src
+COPY wallet-service/src wallet-service/src
+COPY user-service/src user-service/src
+
+# Build only api-gateway (but Maven validates all modules)
 RUN mvn clean package -pl api-gateway -am -DskipTests
 
 # Runtime stage
@@ -20,7 +26,7 @@ FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
-# Copy the built jar
+# Copy only the api-gateway jar
 COPY --from=build /app/api-gateway/target/*.jar app.jar
 
 EXPOSE 8080
