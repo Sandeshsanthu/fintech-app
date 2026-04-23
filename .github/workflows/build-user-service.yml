@@ -1,5 +1,3 @@
-#build-user-service.yml
-
 name: Build user-service
 
 on:
@@ -8,11 +6,9 @@ on:
       - main
     paths:
       - 'user-service/**'
-      - 'wallet-service/**'  # Include wallet-service as dependency
+      - 'wallet-service/**'
       - 'pom.xml'
-  pull_request:
-    branches:
-      - main
+      - '.github/workflows/build-user-service.yml'
   workflow_dispatch:
 
 env:
@@ -32,6 +28,12 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Make Maven wrapper executable
+        run: chmod +x ./mvnw
+
+      - name: Test Maven build
+        run: ./mvnw clean package -pl user-service -am -DskipTests
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -41,17 +43,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Extract metadata (tags, labels)
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
             type=sha,prefix={{branch}}-
 
       - name: Build and push Docker image
@@ -65,5 +63,8 @@ jobs:
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:buildcache,mode=max
 
-      - name: Image digest
-        run: echo ${{ steps.meta.outputs.digest }}
+      - name: Summary
+        run: |
+          echo "✅ Docker image pushed successfully!"
+          echo "📦 Image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest"
+          echo "🔗 Pull command: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest"
