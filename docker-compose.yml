@@ -40,23 +40,23 @@ services:
 
   # User Service (Added)
   user-service:
-    build:
-      context: ./user-service
-      dockerfile: Dockerfile
+    # Use the image pushed by GitHub Actions
+    # Replace 'yourusername' with your actual Docker Hub username
+    image: sandeshs/user-service-fintech:main  
     container_name: paypal-user-service
     ports:
       - "8081:8081"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://user-db:3306/user_db?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_URL=jdbc:mysql://user-db:3306/user_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
-      - WALLET_SERVICE_URL=http://host.docker.internal:8088
+      - WALLET_SERVICE_URL=http://docker.internal
     depends_on:
       user-db:
         condition: service_healthy
     networks:
       - paypal-network
-    restart: unless-stopped
+
 
   # API Gateway
   api-gateway:
