@@ -1,23 +1,34 @@
-FROM maven:3.8.4-openjdk-17-slim AS build
+# user-service/Dockerfile
+FROM eclipse-temurin:17-jdk-alpine AS build
+
 WORKDIR /app
 
-# 1. Copy parent and dummy placeholders
+# Copy parent pom and wrapper
 COPY pom.xml .
-RUN mkdir api-gateway reward-service transaction-service notification-service && \
-    echo '<project><modelVersion>4.0.0</modelVersion><groupId>com.paypal</groupId><artifactId>dummy</artifactId><version>0.0.1-SNAPSHOT</version></project>' > api-gateway/pom.xml && \
-    echo '<project><modelVersion>4.0.0</modelVersion><groupId>com.paypal</groupId><artifactId>dummy</artifactId><version>0.0.1-SNAPSHOT</version></project>' > reward-service/pom.xml && \
-    echo '<project><modelVersion>4.0.0</modelVersion><groupId>com.paypal</groupId><artifactId>dummy</artifactId><version>0.0.1-SNAPSHOT</version></project>' > transaction-service/pom.xml && \
-    echo '<project><modelVersion>4.0.0</modelVersion><groupId>com.paypal</groupId><artifactId>dummy</artifactId><version>0.0.1-SNAPSHOT</version></project>' > notification-service/pom.xml
+COPY .mvn .mvn
+COPY mvnw .
 
-# 2. Copy the real code for BOTH services
-COPY wallet-service ./wallet-service
-COPY user-service ./user-service
+# Copy wallet-service (dependency for user-service)
+COPY wallet-service/pom.xml wallet-service/
+COPY wallet-service/src wallet-service/src
 
-# 3. Build user-service (this will automatically build wallet-service too)
-RUN mvn clean package -pl user-service -am -DskipTests
+# Copy user-service
+COPY user-service/pom.xml user-service/
+COPY user-service/src user-service/src
 
+# Build the project
+RUN ./mvnw clean install -pl user-service -am -DskipTests
+
+# Runtime stage
 FROM eclipse-temurin:17-jre-alpine
+
 WORKDIR /app
+
+# Copy the built jar
 COPY --from=build /app/user-service/target/*.jar app.jar
+
+# Expose port
 EXPOSE 8081
+
+# Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -16,5 +16,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
-  jwt:
-    secret: my-super-secret-key-that-you-never-share
+jwt:
+  secret: my-super-secret-key-that-you-never-share
+
+# Wallet service URL
+wallet:
+  service:
+    url: ${WALLET_SERVICE_URL:http://localhost:8088}
