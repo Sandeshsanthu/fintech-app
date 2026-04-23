@@ -4,10 +4,12 @@ WORKDIR /app
 
 # Copy root pom and the specific module
 COPY pom.xml .
+RUN mkdir user-service reward-service wallet-service transaction-service notification-service
 COPY api-gateway ./api-gateway
 
 # Build the specific module
 RUN mvn clean package -pl api-gateway -am -DskipTests
+
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app

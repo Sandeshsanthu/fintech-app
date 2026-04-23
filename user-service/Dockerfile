@@ -4,6 +4,7 @@ WORKDIR /app
 
 # Copy root pom and the user-service module
 COPY pom.xml .
+RUN mkdir api-gateway reward-service wallet-service transaction-service notification-service
 COPY user-service ./user-service
 
 # Build the specific module
