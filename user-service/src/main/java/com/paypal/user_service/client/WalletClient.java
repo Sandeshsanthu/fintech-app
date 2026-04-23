@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 // @FeignClient(name = "wallet-service", url = "http://localhost:8088/api/v1/wallets")
-@FeignClient(name = "wallet-service", url = "${WALLET_SERVICE_URL:http://localhost:8088}/api/v1/wallets")
+@FeignClient(name = "wallet-service", url = "${WALLET_SERVICE_URL:http://wallet-service:8088}/api/v1/wallets")
 
 public interface WalletClient {
 
