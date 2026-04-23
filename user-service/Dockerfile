@@ -18,7 +18,10 @@ COPY api-gateway/src api-gateway/src
 COPY wallet-service/src wallet-service/src
 COPY user-service/src user-service/src
 
-# Build user-service (wallet-service is a dependency)
+# Build and INSTALL wallet-service first (so user-service can find it)
+RUN mvn clean install -pl wallet-service -DskipTests
+
+# Now build user-service (wallet-service is available as dependency)
 RUN mvn clean package -pl user-service -am -DskipTests
 
 # Runtime stage
