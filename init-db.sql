@@ -7,3 +7,7 @@ USE user_service_db;
 
 USE wallet_service_db;
 -- Add any initial wallet_service tables/data here if needed
+-- Grant permissions
+GRANT ALL PRIVILEGES ON user_service_db.* TO 'root'@'%';
+GRANT ALL PRIVILEGES ON wallet_service_db.* TO 'root'@'%';
+FLUSH PRIVILEGES;
