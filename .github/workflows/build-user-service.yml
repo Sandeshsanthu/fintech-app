@@ -28,6 +28,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Install wallet-service dependency
+        run: mvn clean install -pl wallet-service -DskipTests
+
       - name: Test Maven build
         run: mvn clean package -pl user-service -am -DskipTests
 
