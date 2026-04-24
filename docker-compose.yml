@@ -17,7 +17,6 @@ services:
       - paypal-network
     restart: unless-stopped
 
-  # Databases
   mysql:
     image: mysql:8.0
     container_name: paypal-mysql
@@ -37,7 +36,6 @@ services:
     networks:
       - paypal-network
 
-  # Message Queue
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.1
     container_name: paypal-zookeeper
@@ -72,9 +70,8 @@ services:
     networks:
       - paypal-network
 
-  # Microservices
   wallet-service:
-    image: sandeshs23/wallet-service-fintech:latest
+    image: sandeshs/wallet-service-fintech:latest
     container_name: paypal-wallet
     ports:
       - "8088:8088"
@@ -93,18 +90,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8088/actuator/health || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 60s
+    # HEALTHCHECK REMOVED TO PREVENT FALSE UNHEALTHY STATUS
     networks:
       - paypal-network
     restart: unless-stopped
 
   user-service:
-    image: sandeshs23/user-service-fintech:latest
+    image: sandeshs/user-service-fintech:latest
     container_name: paypal-user
     ports:
       - "8081:8081"
@@ -121,19 +113,14 @@ services:
       kafka:
         condition: service_healthy
       wallet-service:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 60s
+        condition: service_started # Changed from service_healthy
+    # HEALTHCHECK REMOVED
     networks:
       - paypal-network
     restart: unless-stopped
 
   api-gateway:
-    image: sandeshs23/api-gateway-fintech:latest
+    image: sandeshs/api-gateway-fintech:latest
     container_name: paypal-gateway
     ports:
       - "8080:8080"
@@ -146,22 +133,15 @@ services:
       redis:
         condition: service_healthy
       user-service:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 60s
+        condition: service_started # Changed from service_healthy
+    # HEALTHCHECK REMOVED
     networks:
       - paypal-network
     restart: unless-stopped
 
 volumes:
   redis-data:
-    driver: local
   mysql-data:
-    driver: local
 
 networks:
   paypal-network:

@@ -6,7 +6,7 @@ spring:
   application:
     name: api-gateway-service
 
-  # Redis Configuration (Updated property names)
+  # Redis Configuration
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -16,12 +16,10 @@ spring:
   # Cloud Gateway Configuration
   cloud:
     gateway:
-      # HTTP Client Settings (Updated property names)
       httpclient:
         max-initial-line-length: 16384
         max-header-size: 65536
 
-      # Define Routes (NOT default-filters!)
       routes:
         # Health Check Route
         - id: health-check
@@ -31,9 +29,9 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 100
-                redis-rate-limiter.burstCapacity: 200
-                redis-rate-limiter.requestedTokens: 1
+                replenishRate: 100
+                burstCapacity: 200
+                requestedTokens: 1
                 key-resolver: "#{@ipKeyResolver}"
 
         # User Service Route
@@ -44,9 +42,9 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 10
-                redis-rate-limiter.burstCapacity: 20
-                redis-rate-limiter.requestedTokens: 1
+                replenishRate: 10
+                burstCapacity: 20
+                requestedTokens: 1
                 key-resolver: "#{@userKeyResolver}"
 
         # Transaction Service Route
@@ -57,9 +55,9 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 10
-                redis-rate-limiter.burstCapacity: 20
-                redis-rate-limiter.requestedTokens: 1
+                replenishRate: 10
+                burstCapacity: 20
+                requestedTokens: 1
                 key-resolver: "#{@userKeyResolver}"
 
         # Notification Service Route
@@ -70,9 +68,9 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 10
-                redis-rate-limiter.burstCapacity: 20
-                redis-rate-limiter.requestedTokens: 1
+                replenishRate: 10
+                burstCapacity: 20
+                requestedTokens: 1
                 key-resolver: "#{@userKeyResolver}"
 
         # Wallet Service Route
@@ -83,9 +81,9 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 10
-                redis-rate-limiter.burstCapacity: 20
-                redis-rate-limiter.requestedTokens: 1
+                replenishRate: 10
+                burstCapacity: 20
+                requestedTokens: 1
                 key-resolver: "#{@userKeyResolver}"
 
         # Reward Service Route
@@ -96,17 +94,15 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 10
-                redis-rate-limiter.burstCapacity: 20
-                redis-rate-limiter.requestedTokens: 1
+                replenishRate: 10
+                burstCapacity: 20
+                requestedTokens: 1
                 key-resolver: "#{@userKeyResolver}"
 
-      # CORS Configuration (Updated property names)
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins:
-              - "*"
+            allowedOrigins: "*"
             allowedMethods:
               - GET
               - POST
@@ -114,12 +110,10 @@ spring:
               - DELETE
               - PATCH
               - OPTIONS
-            allowedHeaders:
-              - "*"
+            allowedHeaders: "*"
             allowCredentials: false
             maxAge: 3600
 
-# Actuator Configuration
 management:
   endpoints:
     web:
@@ -129,7 +123,6 @@ management:
     health:
       show-details: always
 
-# Logging Configuration
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
