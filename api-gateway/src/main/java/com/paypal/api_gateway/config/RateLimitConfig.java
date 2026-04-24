@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Mono;
 
 @Configuration
-public class RateLimiterConfig {
+public class RateLimitConfig {
 
     @Bean
     public KeyResolver ipKeyResolver() {
