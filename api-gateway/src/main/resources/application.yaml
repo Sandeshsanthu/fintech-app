@@ -5,119 +5,109 @@ spring:
   application:
     name: api-gateway-service
 
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      timeout: 2000ms
+  # =========================
+  # REDIS CONFIG (RateLimiter)
+  # =========================
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
 
   cloud:
     gateway:
+
+      # =========================
+      # NETTY HTTP CLIENT LIMITS
+      # =========================
       httpclient:
-        max-initial-line-length: 16384
-        max-header-size: 65536
-      
-      # ✅ routes directly under gateway (not under server.webflux)
-      routes:
-        # User Service Route
+        max-initial-line-length: 4096
+        max-header-size: 8192
+
+      # =========================
+      # GLOBAL FILTERS
+      # =========================
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - name: RequestSize
+          args:
+            maxSize: 1048576   # 1 MB (bytes)
+
+      # =========================
+      # ROUTES
+      # =========================
+      # routes:
+
+        # ---------- AUTH / USER SERVICE (NO RATE LIMIT) ----------
         - id: user-service
-          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          uri: http://localhost:8081
           predicates:
-            - Path=/auth/**,/api/users/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter:
-                  replenishRate: 10
-                  burstCapacity: 20
-                  requestedTokens: 1
-                key-resolver: "#{@ipKeyResolver}"
+            - Path=/auth/**, /api/users/**
 
-        # Wallet Service Route
-        - id: wallet-service
-          uri: ${WALLET_SERVICE_URL:http://localhost:8088}
-          predicates:
-            - Path=/api/v1/wallets/**,/api/wallet/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter:
-                  replenishRate: 10
-                  burstCapacity: 20
-                  requestedTokens: 1
-                key-resolver: "#{@ipKeyResolver}"
-
-        # Transaction Service Route
+        # ---------- TRANSACTION SERVICE ----------
         - id: transaction-service
-          uri: ${TRANSACTION_SERVICE_URL:http://localhost:8082}
+          uri: http://localhost:8082
           predicates:
             - Path=/api/transactions/**
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter:
-                  replenishRate: 10
-                  burstCapacity: 20
-                  requestedTokens: 1
-                key-resolver: "#{@ipKeyResolver}"
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"
 
-        # Notification Service Route
+        # ---------- NOTIFICATION SERVICE ----------
         - id: notification-service
-          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8084}
+          uri: http://localhost:8084
           predicates:
-            - Path=/api/notifications/**
+            - Path=/api/notify/**
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter:
-                  replenishRate: 10
-                  burstCapacity: 20
-                  requestedTokens: 1
-                key-resolver: "#{@ipKeyResolver}"
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"
 
-        # Reward Service Route
+        # ---------- REWARD SERVICE ----------
         - id: reward-service
-          uri: ${REWARD_SERVICE_URL:http://localhost:8089}
+          uri: http://localhost:8089
           predicates:
             - Path=/api/rewards/**
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter:
-                  replenishRate: 10
-                  burstCapacity: 20
-                  requestedTokens: 1
-                key-resolver: "#{@ipKeyResolver}"
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"
 
-      # Global CORS configuration
+        # ---------- WALLET SERVICE ----------
+        - id: wallet-service
+          uri: http://localhost:8088
+          predicates:
+            - Path=/api/v1/wallets/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"
+
       globalcors:
-        cors-configurations:
+        corsConfigurations:
           '[/**]':
-            allowedOrigins: 
+            allowedOrigins:
               - "http://localhost:3000"
-              - "http://localhost:8080"
             allowedMethods:
               - GET
               - POST
               - PUT
-              - DELETE
               - PATCH
+              - DELETE
               - OPTIONS
-            allowedHeaders: "*"
+            allowedHeaders:
+              - "*"
             allowCredentials: true
             maxAge: 3600
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,gateway
-  endpoint:
-    health:
-      show-details: always
-
-logging:
-  level:
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.web: DEBUG
-    reactor.netty: INFO

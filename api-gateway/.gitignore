@@ -31,25 +31,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-
-# Maven
-target/
-.mvn/
-
-# IDE
-.idea/
-.vscode/
-*.iml
-*.ipr
-*.iws
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-
-# Docker
-.dockerignore

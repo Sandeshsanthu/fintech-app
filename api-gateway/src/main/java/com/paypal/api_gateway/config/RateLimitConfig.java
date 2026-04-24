@@ -9,34 +9,14 @@ import reactor.core.publisher.Mono;
 public class RateLimitConfig {
 
     @Bean
-    public KeyResolver ipKeyResolver() {
-        return exchange -> {
-            String ip = exchange.getRequest()
-                .getRemoteAddress()
-                .getAddress()
-                .getHostAddress();
-            return Mono.just(ip);
-        };
-    }
-
-    @Bean
     public KeyResolver userKeyResolver() {
         return exchange -> {
-            // Try to get user from header, fallback to IP
-            String userId = exchange.getRequest()
-                .getHeaders()
-                .getFirst("X-User-Id");
-            
-            if (userId != null && !userId.isEmpty()) {
+            String userId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
+            if (userId != null) {
                 return Mono.just(userId);
             }
-            
-            // Fallback to IP address
-            String ip = exchange.getRequest()
-                .getRemoteAddress()
-                .getAddress()
-                .getHostAddress();
-            return Mono.just(ip);
+            // callback via IP address
+            return Mono.just(exchange.getRequest().getRemoteAddress().getAddress().getHostAddress());
         };
     }
 }
