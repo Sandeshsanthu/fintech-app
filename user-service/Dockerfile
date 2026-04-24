@@ -5,7 +5,7 @@ WORKDIR /app
 # Install Maven
 RUN apk add --no-cache maven
 
-# Copy parent pom
+# Copy parent pom and me
 COPY pom.xml .
 
 # Copy ALL module pom.xml files

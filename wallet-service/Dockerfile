@@ -2,7 +2,7 @@ FROM eclipse-temurin:17-jdk-alpine AS build
 
 WORKDIR /app
 
-# Install Maven
+# Install Maven and user
 RUN apk add --no-cache maven
 
 # Copy parent pom
