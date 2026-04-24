@@ -5,7 +5,7 @@ WORKDIR /app
 # Install Maven
 RUN apk add --no-cache maven
 
-# Copy parent pom and me
+# Copy parent pom
 COPY pom.xml .
 
 # Copy ALL module pom.xml files
@@ -24,6 +24,10 @@ RUN mvn clean package -pl user-service -am -DskipTests
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
+
+# Install wget for health checks
+RUN apk add --no-cache wget
+
 COPY --from=build /app/user-service/target/user-service-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8081
 ENTRYPOINT ["java", "-jar", "app.jar"]

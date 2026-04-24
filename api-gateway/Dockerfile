@@ -2,33 +2,32 @@ FROM eclipse-temurin:17-jdk-alpine AS build
 
 WORKDIR /app
 
-# Install Maven and gh
+# Install Maven
 RUN apk add --no-cache maven
 
 # Copy parent pom
 COPY pom.xml .
 
-# Copy ALL module pom.xml files (Maven needs to see them)
+# Copy ALL module pom.xml files
 COPY api-gateway/pom.xml api-gateway/
 COPY wallet-service/pom.xml wallet-service/
 COPY user-service/pom.xml user-service/
 
-# Copy ALL module source code (Maven reactor needs them)
+# Copy ALL module source code
 COPY api-gateway/src api-gateway/src
 COPY wallet-service/src wallet-service/src
 COPY user-service/src user-service/src
 
-# Build only api-gateway (but Maven validates all modules)
+# Build only api-gateway
 RUN mvn clean package -pl api-gateway -am -DskipTests
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine
-
 WORKDIR /app
 
-# Copy only the api-gateway jar
-COPY --from=build /app/api-gateway/target/*.jar app.jar
+# Install wget for health checks
+RUN apk add --no-cache wget
 
+COPY --from=build /app/api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
-
 ENTRYPOINT ["java", "-jar", "app.jar"]
